@@ -10,8 +10,8 @@ import (
 	"net/http/httputil"
 	"os"
 
-	"github.com/jdrivas/gafw/config"
-	t "github.com/jdrivas/gafw/term"
+	"github.com/jdrivas/vconfig"
+	t "github.com/jdrivas/termtext"
 )
 
 var httpClient = http.DefaultClient
@@ -83,7 +83,7 @@ func sendReq(req *http.Request, result interface{}) (resp *http.Response, err er
 
 	switch {
 	// TODO: This wil dump the authorization token. Which it probably shouldn't.
-	case config.Debug():
+	case vconfig.Debug():
 		reqDump, dumpErr := httputil.DumpRequestOut(req, true)
 		reqStr := string(reqDump)
 		if dumpErr != nil {
@@ -92,7 +92,7 @@ func sendReq(req *http.Request, result interface{}) (resp *http.Response, err er
 		}
 		fmt.Printf("%s %s\n", t.Title("Request"), t.Text(reqStr))
 		fmt.Println()
-	case config.Verbose():
+	case vconfig.Verbose():
 		fmt.Printf("%s %s\n", t.Title("Request:"), t.Text("%s %s", req.Method, req.URL))
 		fmt.Println()
 	}
@@ -100,7 +100,7 @@ func sendReq(req *http.Request, result interface{}) (resp *http.Response, err er
 	resp, err = httpClient.Do(req)
 	if err == nil {
 
-		if config.Debug() {
+		if vconfig.Debug() {
 			respDump, dumpErr := httputil.DumpResponse(resp, true)
 			respStr := string(respDump)
 			if dumpErr != nil {
@@ -147,7 +147,7 @@ func unmarshal(resp *http.Response, obj interface{}) (err error) {
 	resp.Body.Close()
 	if err == nil {
 
-		if config.Debug() {
+		if vconfig.Debug() {
 			// TODO: Printf-ing the output of json.Indent through the bytes.Buffer.String
 			// produces cruft. However writting directly to it, works o.k.
 			// prettyJSON := bytes.Buffer{}
@@ -166,7 +166,7 @@ func unmarshal(resp *http.Response, obj interface{}) (err error) {
 		}
 
 		json.Unmarshal(body, &obj)
-		if config.Debug() {
+		if vconfig.Debug() {
 			fmt.Printf("%s %s\n", t.Title("Unmarshaled object: "), t.Text("%#v", obj))
 			fmt.Println()
 		}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jdrivas/gafw/config"
 	"github.com/spf13/viper"
 )
 
@@ -62,7 +61,7 @@ func Test_Stack_Bounds(t *testing.T) {
 
 // This sets up viper with Connection configuration.
 func setConnectionConfig(name, url string) {
-	viper.Set(fmt.Sprintf("%s.%s.%s", config.ConnectionsKey, name, config.ServiceURLKey), url)
+	viper.Set(fmt.Sprintf("%s.%s.%s", ConnectionsKey, name, ServiceURLKey), url)
 }
 
 func Test_Stack_Growth(t *testing.T) {

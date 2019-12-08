@@ -5,9 +5,8 @@ import (
 	"os"
 	"sort"
 
-	"github.com/jdrivas/gafw/config"
-	"github.com/jdrivas/gafw/term"
-	t "github.com/jdrivas/gafw/term"
+	t "github.com/jdrivas/termtext"
+	"github.com/jdrivas/vconfig"
 	"github.com/juju/ansiterm"
 	"github.com/spf13/viper"
 )
@@ -157,11 +156,11 @@ func (conns ConnectionList) List() {
 		w := ansiterm.NewTabWriter(os.Stdout, 4, 4, 3, ' ', 0)
 		fmt.Fprintf(w, "%s\n", t.Title("\tName\tURL"))
 		for _, c := range conns {
-			name := term.Text(c.Name)
+			name := t.Text(c.Name)
 			current := ""
 			if c.Name == currentName {
-				name = term.Highlight("%s", c.Name)
-				current = term.Highlight("%s", "*")
+				name = t.Highlight("%s", c.Name)
+				current = t.Highlight("%s", "*")
 			}
 			fmt.Fprintf(w, "%s\t%s\t%s\n", current, name, t.Text("%s", c.ServiceURL))
 		}
@@ -180,7 +179,7 @@ func getAllConnectionsFromConfig() (conns ConnectionList) {
 		if ok {
 			conns = append(conns, conn)
 		} else {
-			fmt.Printf(term.Error(fmt.Errorf("couldn't create a config for connection \"%s\"", name)))
+			fmt.Printf(t.Error(fmt.Errorf("couldn't create a config for connection \"%s\"", name)))
 		}
 	}
 	return conns
@@ -207,7 +206,7 @@ var previouslySetByFlag bool
 // InitConnections initializes a default connection. Needs to happen after we've read in the viper configuration file.
 // TODO: It's probably best if init is idempotent.
 func InitConnections() {
-	if config.Debug() {
+	if vconfig.Debug() {
 		fmt.Printf("Initializing Connections\n")
 	}
 
@@ -215,7 +214,7 @@ func InitConnections() {
 	var ok bool
 	var conn *Connection
 	if ConnectionFlagValue != "" {
-		if config.Debug() {
+		if vconfig.Debug() {
 			fmt.Printf("Using flag value.\n")
 		}
 		conn, ok = GetConnection(ConnectionFlagValue)
@@ -230,7 +229,7 @@ func InitConnections() {
 		// Current conenction should be durable during interactive mode
 		// reset it to the default ...
 		if len(currentConnections) == 0 {
-			if config.Debug() {
+			if vconfig.Debug() {
 				fmt.Printf("No current Connection.\n")
 			}
 			// If there is a connection named default, use it ....
@@ -252,7 +251,7 @@ func InitConnections() {
 						// ... As a last resort set up a broken empty connection.
 						// We won't panic here as we can set it during interactive
 						// mode and it will otherwise error.
-						if config.Debug() {
+						if vconfig.Debug() {
 							fmt.Printf("Using a 'broken' default connection.\n")
 						}
 						conn = &Connection{
@@ -266,7 +265,7 @@ func InitConnections() {
 			conn = GetCurrentConnection()
 		}
 	}
-	if config.Debug() {
+	if vconfig.Debug() {
 		fmt.Printf("Using connection: %s[%s]\n", conn.Name, conn.ServiceURL)
 	}
 	PushCurrentConnection(conn)
@@ -279,7 +278,7 @@ func ResetConnection() {
 	// If the last time through, we were set by a flag
 	// get the old connetion back and decide what to do.
 	if previouslySetByFlag {
-		if config.Debug() {
+		if vconfig.Debug() {
 			fmt.Printf("Reseting connection to pre-flag.\n")
 		}
 
