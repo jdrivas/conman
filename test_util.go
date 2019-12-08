@@ -1,4 +1,4 @@
-package connection
+package conman
 
 import (
 	"github.com/spf13/viper"
