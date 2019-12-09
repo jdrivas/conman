@@ -224,7 +224,12 @@ func InitConnections() {
 		} else {
 			previouslySetByFlag = true
 		}
-	} else {
+
+	}
+
+	// If conn is nil, then either flag connection was bad or we didn't use the flag.
+	// So, go figure out waht connection to use.
+	if conn == nil {
 
 		// Current conenction should be durable during interactive mode
 		// reset it to the default ...
