@@ -9,9 +9,10 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"time"
 
-	"github.com/jdrivas/vconfig"
 	t "github.com/jdrivas/termtext"
+	"github.com/jdrivas/vconfig"
 )
 
 var httpClient = http.DefaultClient
@@ -29,11 +30,11 @@ var httpClient = http.DefaultClient
 // If result is non-nil Send umarshalls the response body,
 // aasumed to be JSON encoded, into the result object passed in.
 // If result is a []map[string]interface{}, you'll get a map of the JSON object.
-func (conn Connection) Send(method, cmd string, content interface{}, result interface{}) (resp *http.Response, err error) {
+func (conn Connection) Send(method, cmd string, content interface{}, result interface{}) (effect *SideEffect, resp *http.Response, err error) {
 
 	if content == nil {
 		req := conn.newRequest(method, cmd, nil)
-		resp, err = sendReq(req, result)
+		effect, resp, err = sendReq(req, result)
 	} else {
 		var b []byte
 		switch c := content.(type) {
@@ -48,29 +49,29 @@ func (conn Connection) Send(method, cmd string, content interface{}, result inte
 			buff := bytes.NewBuffer(b)
 			req := conn.newRequest(method, cmd, buff)
 			req.Header.Add("Content-Type", "application/json")
-			resp, err = sendReq(req, result)
+			effect, resp, err = sendReq(req, result)
 		}
 	}
-	return resp, err
+	return effect, resp, err
 }
 
 // Get works like Send with the GET verb,  but doesn't require a content object.
-func (conn Connection) Get(cmd string, result interface{}) (resp *http.Response, err error) {
+func (conn Connection) Get(cmd string, result interface{}) (effect *SideEffect, resp *http.Response, err error) {
 	return conn.Send(http.MethodGet, cmd, nil, result)
 }
 
 // Post works like Send using the POST verb.
-func (conn Connection) Post(cmd string, content, result interface{}) (resp *http.Response, err error) {
+func (conn Connection) Post(cmd string, content, result interface{}) (effect *SideEffect, resp *http.Response, err error) {
 	return conn.Send(http.MethodPost, cmd, content, result)
 }
 
 // Delete works like Send using the Delte verb.
-func (conn Connection) Delete(cmd string, content, result interface{}) (resp *http.Response, err error) {
+func (conn Connection) Delete(cmd string, content, result interface{}) (effect *SideEffect, resp *http.Response, err error) {
 	return conn.Send(http.MethodDelete, cmd, content, result)
 }
 
 // Patch works like Send using the Patch verb.
-func (conn Connection) Patch(cmd string, content, result interface{}) (resp *http.Response, err error) {
+func (conn Connection) Patch(cmd string, content, result interface{}) (effect *SideEffect, resp *http.Response, err error) {
 	return conn.Send(http.MethodPatch, cmd, content, result)
 }
 
@@ -79,10 +80,10 @@ func (conn Connection) Patch(cmd string, content, result interface{}) (resp *htt
 //
 
 // sendReq sends along the request with some logging along the way.
-func sendReq(req *http.Request, result interface{}) (resp *http.Response, err error) {
+func sendReq(req *http.Request, result interface{}) (effect *SideEffect, resp *http.Response, err error) {
 
 	switch {
-	// TODO: This wil dump the authorization token. Which it probably shouldn't.
+	// TODO: This wil dump the authorization token. Which it probably shouldn't do.
 	case vconfig.Debug():
 		reqDump, dumpErr := httputil.DumpRequestOut(req, true)
 		reqStr := string(reqDump)
@@ -97,7 +98,13 @@ func sendReq(req *http.Request, result interface{}) (resp *http.Response, err er
 		fmt.Println()
 	}
 
+	// Send the request
+	start := time.Now()
 	resp, err = httpClient.Do(req)
+	effect = &SideEffect{
+		ElapsedTime: time.Since(start),
+	}
+	// Process
 	if err == nil {
 
 		if vconfig.Debug() {
@@ -121,7 +128,7 @@ func sendReq(req *http.Request, result interface{}) (resp *http.Response, err er
 		}
 
 	}
-	return resp, err
+	return effect, resp, err
 }
 
 // newRequest creates a request as usual prepending the connections ServiceURL to the cmd.
