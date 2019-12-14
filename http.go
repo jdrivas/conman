@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"strings"
 	"time"
 
 	t "github.com/jdrivas/termtext"
@@ -157,12 +158,28 @@ func (conn Connection) newRequest(method, cmd string, body io.Reader) *http.Requ
 	return req
 }
 
-// This eats the body in the response, but returns the body in
-//  obj passed in. They must match of course.
+var emptyBody = ioutil.NopCloser(strings.NewReader(""))
+
+// unmarshal will attemp to unmarhsall JSON into obj.
+// It restores the body to the resp, in any case.
 func unmarshal(resp *http.Response, obj interface{}) (err error) {
 	var body []byte
+
+	// lifted from source to http.DumpResponse
+	// Save body 
+	save := resp.Body
+	savecl := resp.ContentLength
+	if resp.Body == nil {
+		resp.Body = emptyBody
+	} else {
+		save, resp.Body, err = drainBody(resp.Body)
+		if err != nil {
+			return err
+		}
+	}
+
 	body, err = ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
+	defer resp.Body.Close()
 	if err == nil {
 
 		if vconfig.Debug() {
@@ -189,8 +206,14 @@ func unmarshal(resp *http.Response, obj interface{}) (err error) {
 			fmt.Println()
 		}
 	}
+
+	// Restore body.
+	resp.Body = save
+	resp.ContentLength = savecl
 	return err
 }
+
+
 
 // Returns an "informative" error if not 200
 func checkReturnCode(resp http.Response) (err error) {
@@ -217,4 +240,24 @@ func httpErrorMesg(resp http.Response, message string) error {
 
 func httpError(resp http.Response) error {
 	return httpErrorMesg(resp, "")
+}
+
+// Copied from http.httputil/dump.go
+// http.DumpResponse keeps a copy of the body 
+// around for use once its' been read off of the http.Resp.
+// Let'd do that too.
+
+func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error){
+	if b == http.NoBody {
+		// no copying neede. Preserve the magic sentinel meaning of NoBody.
+		return http.NoBody, http.NoBody, nil
+	}
+	var buf bytes.Buffer
+	if _, err = buf.ReadFrom(b); err != nil {
+		return nil, b, err
+	}
+	if err = b.Close(); err != nil {
+		return nil, b, err
+	}
+	return ioutil.NopCloser(&buf), ioutil.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }
