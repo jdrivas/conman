@@ -60,6 +60,11 @@ func (conn Connection) Get(cmd string, result interface{}) (effect *SideEffect, 
 	return conn.Send(http.MethodGet, cmd, nil, result)
 }
 
+// GetWithContent works like Send with GET verb. (This is provided for compatilibty with non-standard REST apis)
+func (conn Connection) GetWithContent(cmd string, content, result interface{}) (effect *SideEffect, resp *http.Response, err error) {
+	return conn.Send(http.MethodGet, cmd, content, result)
+}
+
 // Post works like Send using the POST verb.
 func (conn Connection) Post(cmd string, content, result interface{}) (effect *SideEffect, resp *http.Response, err error) {
 	return conn.Send(http.MethodPost, cmd, content, result)
@@ -95,7 +100,7 @@ func sendReq(req *http.Request, result interface{}) (effect *SideEffect, resp *h
 		fmt.Println()
 	case vconfig.Verbose():
 		fmt.Printf("%s %s\n", t.Title("Request:"), t.Text("%s %s", req.Method, req.URL))
-		fmt.Println()
+		// fmt.Println()
 	}
 
 	// Send the request
@@ -104,6 +109,10 @@ func sendReq(req *http.Request, result interface{}) (effect *SideEffect, resp *h
 	effect = &SideEffect{
 		ElapsedTime: time.Since(start),
 	}
+	if vconfig.Verbose() {
+		fmt.Printf("%s %s\n", t.Title("Elapsed request time:"), t.Text("%d milliseconds", effect.ElapsedTime.Milliseconds()))
+	}
+
 	// Process
 	if err == nil {
 
@@ -119,7 +128,9 @@ func sendReq(req *http.Request, result interface{}) (effect *SideEffect, resp *h
 		}
 
 		// Do this after the Dump, the dump reads out the response for reprting and
-		// replaces the reader with anotherone that has the data.
+		// replaces the reader with anothe rone that has the data.
+		// TODO: Figure out how to do the same replacement here so
+		// th unmarshal doesn't eat the Response body.
 		err = checkReturnCode(*resp)
 		if result != nil {
 			if err == nil {
