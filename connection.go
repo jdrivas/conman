@@ -2,12 +2,10 @@ package conman
 
 import (
 	"fmt"
-	"os"
 	"sort"
 
 	t "github.com/jdrivas/termtext"
 	"github.com/jdrivas/vconfig"
-	"github.com/juju/ansiterm"
 	"github.com/spf13/viper"
 )
 
@@ -119,7 +117,21 @@ func SetConnection(name string) (err error) {
 
 // GetAllConnections returns a list of known connections
 func GetAllConnections() ConnectionList {
-	return getAllConnectionsFromConfig()
+	conns := getAllConnectionsFromConfig()
+	sort.Sort(byName(conns))
+	return conns
+}
+
+// FindConnection returns a connection if it's in the list
+// otherwise nil.
+func (cl ConnectionList) FindConnection(name string) (conn *Connection) {
+	for _, c := range cl {
+		if c.Name == name {
+			conn = c
+			break
+		}
+	}
+	return conn
 }
 
 //
@@ -146,28 +158,6 @@ func PopCurrentConnection() (c *Connection) {
 	}
 	// fmt.Printf("Pop Done - Size of conn stack: %d\n", len(currentConnections))
 	return c
-}
-
-// List displpays the list of connections and notes the current one.
-func (conns ConnectionList) List() {
-	sort.Sort(byName(conns))
-	if len(conns) > 0 {
-		currentName := GetCurrentConnection().Name
-		w := ansiterm.NewTabWriter(os.Stdout, 4, 4, 3, ' ', 0)
-		fmt.Fprintf(w, "%s\n", t.Title("\tName\tURL"))
-		for _, c := range conns {
-			name := t.Text(c.Name)
-			current := ""
-			if c.Name == currentName {
-				name = t.Highlight("%s", c.Name)
-				current = t.Highlight("%s", "*")
-			}
-			fmt.Fprintf(w, "%s\t%s\t%s\n", current, name, t.Text("%s", c.ServiceURL))
-		}
-		w.Flush()
-	} else {
-		fmt.Printf("%s\n", t.Title("There were no connections."))
-	}
 }
 
 // Private API

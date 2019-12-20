@@ -166,7 +166,7 @@ func unmarshal(resp *http.Response, obj interface{}) (err error) {
 	var body []byte
 
 	// lifted from source to http.DumpResponse
-	// Save body 
+	// Save body
 	save := resp.Body
 	savecl := resp.ContentLength
 	if resp.Body == nil {
@@ -213,8 +213,6 @@ func unmarshal(resp *http.Response, obj interface{}) (err error) {
 	return err
 }
 
-
-
 // Returns an "informative" error if not 200
 func checkReturnCode(resp http.Response) (err error) {
 	err = nil
@@ -243,11 +241,11 @@ func httpError(resp http.Response) error {
 }
 
 // Copied from http.httputil/dump.go
-// http.DumpResponse keeps a copy of the body 
+// http.DumpResponse keeps a copy of the body
 // around for use once its' been read off of the http.Resp.
 // Let'd do that too.
 
-func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error){
+func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
 	if b == http.NoBody {
 		// no copying neede. Preserve the magic sentinel meaning of NoBody.
 		return http.NoBody, http.NoBody, nil
