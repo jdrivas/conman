@@ -145,7 +145,6 @@ func sendReq(req *http.Request, result interface{}) (effect *SideEffect, resp *h
 
 // newRequest creates a request as usual prepending the connections ServiceURL to the cmd.
 func (conn Connection) newRequest(method, cmd string, body io.Reader) *http.Request {
-	// fmt.Printf("Generating request for connection: %#+v\n", conn)
 	req, err := http.NewRequest(method, conn.ServiceURL+cmd, body)
 	if err != nil {
 		panic(fmt.Sprintf("Coulnd't generate HTTP request - %s\n", err.Error()))
@@ -243,8 +242,7 @@ func httpError(resp http.Response) error {
 // Copied from http.httputil/dump.go
 // http.DumpResponse keeps a copy of the body
 // around for use once its' been read off of the http.Resp.
-// Let'd do that too.
-
+// Let's do that too.
 func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
 	if b == http.NoBody {
 		// no copying neede. Preserve the magic sentinel meaning of NoBody.
