@@ -60,6 +60,13 @@ func TestInitialConfig(t *testing.T) {
 			expected:      e{conName: "b", numConns: 2},
 		},
 		{
+			name:          "Two Configurations empty default, and setting to the other.",
+			defaultConfig: "",
+			configs:       []config{a, b},
+			setConfig:     "b",
+			expected:      e{conName: "a", numConns: 2},
+		},
+		{
 			name:          "Two Configurations, with default, and setting to the other",
 			defaultConfig: "b",
 			configs:       []config{a, b},
