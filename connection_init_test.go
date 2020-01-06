@@ -105,6 +105,15 @@ func TestInitialConfig(t *testing.T) {
 					t.Errorf("Got %d connections, expected %d connections: %#v", len(cl), c.expected.numConns, cl)
 				}
 
+				for _, cfg := range c.configs {
+					if cn, ok := GetConnection(cfg.name); !ok {
+						t.Errorf("Couldn't find expected connection %s with GetConnection()", cfg.name)
+						if cn.ServiceURL != cfg.url {
+							t.Errorf("Service URL got corrupted in tranist. Got: %s, expected %s", cn.ServiceURL, cfg.url)
+						}
+					}
+				}
+
 				// If we're not doing a set then we're done
 				if c.setConfig == "" {
 					break

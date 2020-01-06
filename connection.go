@@ -13,6 +13,10 @@ import (
 // Public API
 //
 
+// TODO: Add a way to add an connection object to the configuration
+// extra points for adding a anbility to add it to the configuration file if one
+// is there.
+
 // Connection contains information for connecting to a service endpoint.
 type Connection struct {
 	Name       string
