@@ -40,7 +40,7 @@ func GetCurrentConnection() (c *Connection, err error) {
 		cn := viper.GetString(DefaultConnectionNameKey)
 		var ok bool
 		if c, ok = GetConnection(cn); !ok {
-			err = fmt.Errorf("couldn't find connection: \"%s\"", cn)
+			err = fmt.Errorf("couldn't find connection: %q", cn)
 		}
 	} else {
 		err = fmt.Errorf("defualt connection not set")
@@ -57,7 +57,7 @@ func GetConnection(name string) (*Connection, bool) {
 func SetConnection(name string) (ok bool) {
 	var conn *Connection
 	if conn, ok = GetConnection(name); ok {
-		viper.Set(DefaultConnectionNameKey, conn.Name)
+		vconfig.Set(DefaultConnectionNameKey, conn.Name)
 	}
 	return ok
 }
@@ -90,7 +90,7 @@ func getAllConnectionsFromConfig() (cl ConnectionList) {
 		if c, ok := getConnectionFromConfig(name); ok {
 			cl = append(cl, c)
 		} else {
-			panic(fmt.Sprintf("Couldn't find connection name \"%s\" in configuration.", name))
+			panic(fmt.Sprintf("Expected but couldn't find connection name %q in configuration.", name))
 		}
 	}
 	return cl
@@ -159,9 +159,9 @@ func InitConnections() {
 				viper.Set(fmt.Sprintf("%s.%s.%s",
 					ConnectionsKey, conn.Name, ServiceURLKey), conn.ServiceURL)
 			}
-			viper.Set(DefaultConnectionNameKey, conn.Name)
+			vconfig.Set(DefaultConnectionNameKey, conn.Name)
 		} else {
-			viper.Set(DefaultConnectionNameKey, conn.Name)
+			vconfig.Set(DefaultConnectionNameKey, conn.Name)
 		}
 	}
 	if vconfig.Debug() {
